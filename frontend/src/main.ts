@@ -1,5 +1,10 @@
-import { bootstrapApplication } from '@angular/platform-browser';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideZoneChangeDetection } from '@angular/core';
-import { AppComponent } from './app/app.component';
-bootstrapApplication(AppComponent, { providers: [provideHttpClient(), provideZoneChangeDetection({eventCoalescing:true})] }).catch(console.error);
+import { bootstrapApplication } from "@angular/platform-browser";
+import { provideHttpClient, withInterceptors } from "@angular/common/http";
+import { provideZoneChangeDetection } from "@angular/core";
+import { AppComponent } from "./app/app.component";
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideHttpClient(),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+  ],
+}).catch(console.error);
