@@ -1,10 +1,165 @@
-<header class="site-header"><div class="shell header-inner"><button class="brand" (click)="changeView('popular')" aria-label="CineScope inicio"><span class="brand-mark">▶</span> Cine<span>Scope</span></button><nav aria-label="Navegación principal"><button [class.active]="view()==='popular'" (click)="changeView('popular')">Descubrir</button><button [class.active]="view()==='top-rated'" (click)="changeView('top-rated')">Mejor calificadas</button><button [class.active]="view()==='favorites'" (click)="changeView('favorites')">♡ Favoritos <small>{{favorites.movies().length}}</small></button></nav></div></header>
-<main><section class="hero"><div class="shell"><p class="eyebrow">TU PRÓXIMA GRAN HISTORIA</p><h1>El cine que amas,<br><em>en un solo lugar.</em></h1><p class="hero-subtitle">Explora películas populares, descubre nuevas historias y guarda tus favoritas.</p><div class="search-wrap"><span aria-hidden="true">⌕</span><input type="search" aria-label="Buscar películas" placeholder="Busca una película por su nombre..." [ngModel]="query()" (ngModelChange)="onSearch($event)"/><span class="search-hint">TMDB</span></div></div></section>
-<section class="shell catalog"><div class="section-heading"><div><p class="eyebrow">EXPLORA EL CATÁLOGO</p><h2>{{title()}}</h2></div><label class="genre-select">Género <select aria-label="Filtrar por género" [ngModel]="genre()" (ngModelChange)="genre.set(+$event)"><option [ngValue]="0">Todos</option>@for(g of genres();track g.id){<option [ngValue]="g.id">{{g.name}}</option>}</select></label></div>
-@if(loading()){<div class="state" role="status"><div class="spinner"></div><h3>Buscando buenas historias...</h3><p>Consultando películas, espera un momento.</p></div>}
-@else if(error()){<div class="state" role="alert"><span class="state-icon">⚠</span><h3>No pudimos cargar las películas</h3><p>{{error()}}</p><button class="primary-button" (click)="load()">Reintentar</button></div>}
-@else if(displayed().length===0){<div class="state"><span class="state-icon">🎬</span><h3>No encontramos películas</h3><p>{{view()==='favorites'?'Guarda películas con el corazón para verlas aquí.':'Prueba con otra búsqueda o cambia el filtro de género.'}}</p><button class="primary-button" (click)="changeView('popular')">Ver populares</button></div>}
-@else{<div class="movie-grid">@for(movie of displayed();track movie.id){<app-movie-card [movie]="movie" [isFavorite]="favorites.has(movie.id)" (details)="openDetails($event)" (favorite)="favorites.toggle($event)"/>}</div>}
-@if(view()!=='favorites'&&!loading()&&!error()&&totalPages()>1){<nav class="pagination" aria-label="Paginación"><button (click)="changePage(page()-1)" [disabled]="page()===1">← Anterior</button><span>Página {{page()}} de {{totalPages()}}</span><button (click)="changePage(page()+1)" [disabled]="page()===totalPages()">Siguiente →</button></nav>}
-</section></main><footer class="site-footer"><div class="shell">CineScope · Proyecto técnico Full Stack <span>Datos proporcionados por TMDB. Este producto no está avalado ni certificado por TMDB.</span></div></footer>
-@if(modalOpen()){<app-movie-detail [movie]="selected()" [loading]="detailLoading()" [error]="detailError()" [isFavorite]="selected() ? favorites.has(selected()!.id):false" (close)="closeDetails()" (retry)="retryDetails()" (favorite)="favorites.toggle($event)"/>}
+<header class="site-header">
+  <div class="shell header-inner">
+    <button
+      class="brand"
+      (click)="changeView('popular')"
+      aria-label="CineScope inicio"
+    >
+      <span class="brand-mark">▶</span> Cine<span>Scope</span>
+    </button>
+    <nav aria-label="Navegación principal">
+      <button
+        [class.active]="view() === 'popular'"
+        (click)="changeView('popular')"
+      >
+        Descubrir</button
+      ><button
+        [class.active]="view() === 'top-rated'"
+        (click)="changeView('top-rated')"
+      >
+        Mejor calificadas</button
+      ><button
+        [class.active]="view() === 'favorites'"
+        (click)="changeView('favorites')"
+      >
+        ♡ Favoritos <small>{{ favorites.movies().length }}</small>
+      </button>
+    </nav>
+  </div>
+</header>
+<main>
+  <section class="hero">
+    <div class="shell">
+      <p class="eyebrow">TU PRÓXIMA GRAN HISTORIA</p>
+      <h1>El cine que amas,<br /><em>en un solo lugar.</em></h1>
+      <p class="hero-subtitle">
+        Explora películas populares, descubre nuevas historias y guarda tus
+        favoritas.
+      </p>
+      <div class="search-wrap">
+        <span aria-hidden="true">⌕</span
+        ><input
+          type="search"
+          aria-label="Buscar películas"
+          placeholder="Busca una película por su nombre..."
+          [ngModel]="query()"
+          (ngModelChange)="onSearch($event)"
+        /><span class="search-hint">TMDB</span>
+      </div>
+    </div>
+  </section>
+  <section class="shell catalog">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">EXPLORA EL CATÁLOGO</p>
+        <h2>{{ title() }}</h2>
+      </div>
+      <label class="genre-select"
+        >Género
+        <select
+          aria-label="Filtrar por género"
+          [ngModel]="genre()"
+          (ngModelChange)="changeGenre($event)"
+        >
+          <option [ngValue]="0">Todos</option>
+          @for(g of genres();track g.id){
+          <option [ngValue]="g.id">{{ g.name }}</option>
+          }
+        </select></label
+      >
+    </div>
+    @if(loading()){
+    <div class="state" role="status">
+      <div class="spinner"></div>
+      <h3>Buscando buenas historias...</h3>
+      <p>Consultando películas, espera un momento.</p>
+    </div>
+    } @else if(error()){
+    <div class="state" role="alert">
+      <span class="state-icon">⚠</span>
+      <h3>No pudimos cargar las películas</h3>
+      <p>{{ error() }}</p>
+      <button class="primary-button" (click)="load()">Reintentar</button>
+    </div>
+    } @else if(displayed().length===0){
+    <div class="state">
+      <span class="state-icon">🎬</span>
+      <h3>No encontramos películas</h3>
+      <p>
+        {{
+          view() === "favorites"
+            ? "Guarda películas con el corazón para verlas aquí."
+            : "Prueba con otra búsqueda o cambia el filtro de género."
+        }}
+      </p>
+      <button class="primary-button" (click)="changeView('popular')">
+        Ver populares
+      </button>
+    </div>
+    } @else{
+    <div class="movie-grid">
+      @for(movie of displayed();track movie.id){<app-movie-card
+        [movie]="movie"
+        [isFavorite]="favorites.has(movie.id)"
+        (details)="openDetails($event)"
+        (favorite)="favorites.toggle($event)"
+      />}
+    </div>
+    } @if (view() !== 'favorites' && !loading() && !error() && totalPages() > 1)
+    {
+    <nav class="pagination" aria-label="Paginación de películas">
+      <!-- Página anterior -->
+      <button
+        type="button"
+        (click)="changePage(page() - 1)"
+        [disabled]="page() === 1"
+        aria-label="Página anterior"
+      >
+        ← Anterior
+      </button>
+
+      <!-- Cinco botones numéricos -->
+      @for (pageNumber of visiblePages(); track pageNumber) {
+      <button
+        type="button"
+        class="page-number"
+        [class.active]="page() === pageNumber"
+        [attr.aria-current]="page() === pageNumber ? 'page' : null"
+        [attr.aria-label]="'Ir a la página ' + pageNumber"
+        (click)="changePage(pageNumber)"
+      >
+        {{ pageNumber }}
+      </button>
+      }
+
+      <!-- Página siguiente -->
+      <button
+        type="button"
+        (click)="changePage(page() + 1)"
+        [disabled]="page() === totalPages()"
+        aria-label="Página siguiente"
+      >
+        Siguiente →
+      </button>
+    </nav>
+    }
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="shell">
+    CineScope · Proyecto técnico Full Stack
+    <span
+      >Datos proporcionados por TMDB. Este producto no está avalado ni
+      certificado por TMDB.</span
+    >
+  </div>
+</footer>
+@if(modalOpen()){<app-movie-detail
+  [movie]="selected()"
+  [loading]="detailLoading()"
+  [error]="detailError()"
+  [isFavorite]="selected() ? favorites.has(selected()!.id) : false"
+  (close)="closeDetails()"
+  (retry)="retryDetails()"
+  (favorite)="favorites.toggle($event)"
+/>}
