@@ -60,7 +60,6 @@
           aria-label="Filtrar por género"
           [ngModel]="genre()"
           (ngModelChange)="changeGenre($event)"
-          [disabled]="!!activeQuery()"
         >
           <option [ngValue]="0">Todos</option>
           @for(g of genres();track g.id){

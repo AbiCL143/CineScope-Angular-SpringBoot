@@ -8,9 +8,14 @@ import org.springframework.http.HttpStatus;
 @RequestMapping("/api/movies")
 public class MovieController {
     private final TmdbService tmdb;
+    private final MovieSearchService movieSearch;
 
-    public MovieController(TmdbService tmdb) {
+    public MovieController(
+            TmdbService tmdb,
+            MovieSearchService movieSearch) {
+
         this.tmdb = tmdb;
+        this.movieSearch = movieSearch;
     }
 
     @GetMapping("/popular")
@@ -26,12 +31,38 @@ public class MovieController {
     }
 
     @GetMapping("/search")
-    public String search(@RequestParam String query, @RequestParam(defaultValue = "1") int page) {
+    public String search(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int genre) {
+
         validatePage(page);
-        if (query.isBlank() || query.length() > 150)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+
+        if (query.isBlank() || query.length() > 150) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
                     "La búsqueda debe tener entre 1 y 150 caracteres.");
-        return tmdb.fetch("/search/movie", page, query.trim());
+        }
+
+        if (genre < 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El género no es válido.");
+        }
+
+        String normalizedQuery = query.trim();
+
+        if (genre > 0) {
+            return movieSearch.searchByGenre(
+                    normalizedQuery,
+                    genre,
+                    page);
+        }
+
+        return tmdb.fetch(
+                "/search/movie",
+                page,
+                normalizedQuery);
     }
 
     @GetMapping("/discover")
