@@ -35,27 +35,46 @@ export class AppComponent {
   private request?: Subscription;
   private detailRequest?: Subscription;
   private debounce?: ReturnType<typeof setTimeout>;
+
   readonly displayed = computed(() => {
     const list =
       this.view() === "favorites" ? this.favorites.movies() : this.movies();
-    return this.genre() === 0
-      ? list
-      : list.filter(
-          (m) =>
-            m.genre_ids?.includes(this.genre()) ||
-            m.genres?.some((g) => g.id === this.genre())
-        );
-  });
-  readonly title = computed(() =>
-    this.view() === "favorites"
-      ? "Mis favoritas"
-      : this.activeQuery()
-      ? `Resultados para “${this.activeQuery()}”`
-      : this.view() === "top-rated"
-      ? "Mejor calificadas"
-      : "Películas populares"
-  );
 
+    // Los favoritos sí se filtran localmente.
+    if (this.view() === "favorites" && this.genre() !== 0) {
+      return list.filter(
+        (movie) =>
+          movie.genre_ids?.includes(this.genre()) ||
+          movie.genres?.some((g) => g.id === this.genre())
+      );
+    }
+
+    return list;
+  });
+
+  readonly title = computed(() => {
+    const selectedGenre = this.genres().find((g) => g.id === this.genre());
+
+    const genreName = selectedGenre?.name;
+
+    if (this.view() === "favorites") {
+      return genreName ? `Mis favoritas · ${genreName}` : "Mis favoritas";
+    }
+
+    if (this.activeQuery()) {
+      return genreName
+        ? `Resultados de “${this.activeQuery()}” · ${genreName}`
+        : `Resultados para “${this.activeQuery()}”`;
+    }
+
+    if (genreName) {
+      return `Películas de ${genreName}`;
+    }
+
+    return this.view() === "top-rated"
+      ? "Mejor calificadas"
+      : "Películas populares";
+  });
   readonly visiblePages = computed(() => {
     const total = this.totalPages();
     const current = this.page();
@@ -121,16 +140,40 @@ export class AppComponent {
     this.load();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
   load() {
-    if (this.view() === "favorites") return;
+    if (this.view() === "favorites") {
+      return;
+    }
+
     this.request?.unsubscribe();
+
     this.loading.set(true);
     this.error.set("");
-    const obs = this.activeQuery()
-      ? this.api.search(this.activeQuery(), this.page())
-      : this.view() === "top-rated"
-      ? this.api.topRated(this.page())
-      : this.api.popular(this.page());
+
+    const currentPage = this.page();
+    const selectedGenre = this.genre();
+    const searchQuery = this.activeQuery();
+
+    let obs;
+
+    if (searchQuery) {
+      // Conservamos la búsqueda por nombre.
+      obs = this.api.search(searchQuery, currentPage);
+    }
+    else if (selectedGenre !== 0) {
+      // Filtrado real por género desde TMDB.
+      const sort = this.view() === "top-rated" ? "top-rated" : "popularity";
+
+      obs = this.api.discover(selectedGenre, currentPage, sort);
+    }
+    else if (this.view() === "top-rated") {
+      obs = this.api.topRated(currentPage);
+    }
+    else {
+      obs = this.api.popular(currentPage);
+    }
+
     this.request = obs.pipe(finalize(() => this.loading.set(false))).subscribe({
       next: (data: Page<Movie>) => {
         this.movies.set(data.results);
@@ -142,6 +185,7 @@ export class AppComponent {
       },
     });
   }
+
   openDetails(movie: Movie) {
     this.modalOpen.set(true);
     this.selected.set(null);

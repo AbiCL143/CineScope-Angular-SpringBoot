@@ -47,6 +47,7 @@ Abre `http://localhost:4200`. El proxy de Angular redirige `/api` a `http://loca
 | GET | `/api/movies/{id}` | Detalle |
 | GET | `/api/movies/top-rated?page=1` | Mejor calificadas |
 | GET | `/api/movies/genres` | Catálogo de géneros |
+| GET | `/api/movies/discover?genre=28&page=1&sort=popularity` | Buscar |
 
 ## Tests y build
 ```bash
