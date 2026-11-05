@@ -68,13 +68,16 @@ export class AppComponent {
     }
 
     if (genreName) {
-      return `Películas de ${genreName}`;
+      return this.view() === "top-rated"
+        ? `Mejor calificadas · ${genreName}`
+        : `Películas de ${genreName}`;
     }
 
     return this.view() === "top-rated"
       ? "Mejor calificadas"
       : "Películas populares";
   });
+
   readonly visiblePages = computed(() => {
     const total = this.totalPages();
     const current = this.page();
@@ -158,8 +161,7 @@ export class AppComponent {
     let obs;
 
     if (searchQuery) {
-      // Conservamos la búsqueda por nombre.
-      obs = this.api.search(searchQuery, currentPage);
+      obs = this.api.search(searchQuery, currentPage, selectedGenre);
     }
     else if (selectedGenre !== 0) {
       // Filtrado real por género desde TMDB.

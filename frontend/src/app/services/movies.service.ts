@@ -29,11 +29,16 @@ export class MoviesService {
     });
   }
 
-  search(query: string, page: number): Observable<Page<Movie>> {
-    return this.http.get<Page<Movie>>("/api/movies/search", {
-      params: new HttpParams().set("query", query).set("page", page),
-    });
+  search(query: string, page: number, genreId = 0): Observable<Page<Movie>> {
+    let params = new HttpParams().set("query", query).set("page", page);
+
+    if (genreId > 0) {
+      params = params.set("genre", genreId);
+    }
+
+    return this.http.get<Page<Movie>>("/api/movies/search", { params });
   }
+
   details(id: number): Observable<Movie> {
     return this.http.get<Movie>(`/api/movies/${id}`);
   }
